@@ -1,0 +1,29 @@
+{
+	order webdav before file_server
+	auto_https off
+	admin off
+	log {
+		# logging increases mem usage significantly
+		output discard
+		# output stdout
+		format console
+	}
+	storage file_system {
+		root /home/caddy/caddy-data
+	}
+}
+
+:80 {
+	@get method GET
+	root * /home/caddy/caddy-media
+	route {
+		header {
+			-Server
+		}
+		file_server @get browse
+		webdav
+	}
+	basic_auth {
+		{$BASIC_AUTH_USERNAME} {$BASIC_AUTH_PASSWORD}
+	}
+}
