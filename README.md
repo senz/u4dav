@@ -14,6 +14,8 @@ Intended to be used in homelabs, i.e. for [Paperless-ngx](https://docs.paperless
 
 ## Usage
 
+`docker pull ghcr.io/senz/u4dav:main`
+
 Container env variables:
 
 | Var name |       Description         |
@@ -24,4 +26,4 @@ Container env variables:
 Mount your data under `/home/caddy/caddy-media` container folder.
 
 Quick local test:
-`docker run  -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/home/caddy/caddy-media caddy`
+`docker run  -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/home/caddy/caddy-media ghcr.io/senz/u4dav:main`
