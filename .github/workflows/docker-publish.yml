@@ -1,13 +1,6 @@
 name: Docker
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 on:
-  # schedule:
-  #   - cron: '15 2 * * *'
   push:
     branches: [ "main" ]
     # Publish semver tags as releases.
@@ -102,9 +95,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: |
             ${{ steps.meta.outputs.labels }}
-          # sbom: ${{ github.event_name != 'pull_request' }}
           sbom: true
-          # provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || '' }}
           provenance: mode=max
           cache-from: type=gha
           cache-to: type=gha,mode=max
