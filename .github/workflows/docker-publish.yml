@@ -20,6 +20,7 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
+  CADDY_VERSION: 2.8.4
 
 
 jobs:
@@ -79,7 +80,7 @@ jobs:
           context: .
           file: Containerfile
           build-args: |
-            CADDY_VERSION=${{ env.CADDY_VERSION || '2.8.4' }}
+            CADDY_VERSION=${{ env.CADDY_VERSION }}
             BUILDPLATFORM=x86_64
             TARGETOS=linux
             TARGETARCH=amd64
@@ -93,13 +94,14 @@ jobs:
           context: .
           file: Containerfile
           build-args: |
-            CADDY_VERSION=${{ env.CADDY_VERSION || '2.8.4' }}
+            CADDY_VERSION=${{ env.CADDY_VERSION }}
             BUILDPLATFORM=x86_64
             TARGETOS=linux
             TARGETARCH=amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
           # sbom: ${{ github.event_name != 'pull_request' }}
           sbom: true
           # provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || '' }}
@@ -107,7 +109,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # platforms: linux/amd64,linux/arm64
-          annotations: ${{ steps.meta.outputs.annotations }}
+          annotations: |
+            ${{ steps.meta.outputs.labels }}
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
