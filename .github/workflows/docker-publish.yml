@@ -108,8 +108,8 @@ jobs:
           cache-to: type=gha,mode=max
           # platforms: linux/amd64,linux/arm64
           annotations: ${{ steps.meta.outputs.annotations }}
-          env:
-            SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
