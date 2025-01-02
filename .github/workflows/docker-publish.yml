@@ -14,6 +14,7 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
   CADDY_VERSION: 2.8.4
+  COSIGN_RELEASE: v2.4.1
 
 
 jobs:
@@ -37,7 +38,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
         with:
-          cosign-release: 'v2.2.4'
+          cosign-release: ${{ env.COSIGN_RELEASE }}
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
