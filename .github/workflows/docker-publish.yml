@@ -93,7 +93,7 @@ jobs:
           context: .
           file: Containerfile
           build-args: |
-            CADDY_VERSION=${{ github.event_name == 'pull_request' && '2.8.4' || env.CADDY_VERSION }}
+            CADDY_VERSION=${{ env.CADDY_VERSION || '2.8.4' }}
             BUILDPLATFORM=x86_64
             TARGETOS=linux
             TARGETARCH=amd64
