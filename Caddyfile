@@ -20,6 +20,9 @@
 		header {
 			-Server
 		}
+		request_body {
+			max_size 1gb
+		}
 		file_server @get browse
 		webdav
 	}
