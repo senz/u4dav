@@ -1,0 +1,29 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps): update dependency"
+    labels:
+      - "docker"
+    allow:
+      - dependency-name: "cosign"
+        dependency-type: "direct"
+      - dependency-name: "setup-buildx-action"
+        dependency-type: "direct"
+      - dependency-name: "login-action"
+        dependency-type: "direct"
+      - dependency-name: "metadata-action"
+        dependency-type: "direct"
+      - dependency-name: "setup-qemu-action"
+        dependency-type: "direct"
+      - dependency-name: "build-push-action"
+        dependency-type: "direct"
