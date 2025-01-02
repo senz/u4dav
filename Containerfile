@@ -1,7 +1,7 @@
 # https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/
 # https://github.com/juvenn/caddy-dav
 
-ARG CADDY_VERSION
+ARG CADDY_VERSION=2.9
 FROM --platform=$BUILDPLATFORM caddy:${CADDY_VERSION}-builder-alpine AS builder
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
