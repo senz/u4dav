@@ -4,8 +4,8 @@
 	admin off
 	log {
 		# logging increases mem usage significantly
-		output discard
-		# output stdout
+		# output discard
+		output stdout
 		format console
 	}
 	storage file_system {
