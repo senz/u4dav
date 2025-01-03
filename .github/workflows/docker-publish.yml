@@ -107,7 +107,8 @@ jobs:
             BUILDPLATFORM=x86_64
             TARGETOS=${{ matrix.platform.targetos }}
             TARGETARCH=${{ matrix.platform.targetarch }}
-          push: ${{ github.event_name != 'pull_request' }}
+          # push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: |
             ${{ steps.meta.outputs.labels }}
@@ -120,6 +121,9 @@ jobs:
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
+      - name: Echo build-and-push outputs
+        run: echo "${{ steps.build-and-push.outputs }}"
+        
       - name: Export digest
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.digest"
