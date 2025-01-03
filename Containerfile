@@ -7,9 +7,9 @@ ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG TARGETOS TARGETARCH
 
-RUN echo "Building for $TARGETOS/$TARGETARCH on $BUILDPLATFORM" && \
-    echo "Caddy version: ${CADDY_VERSION}" && \
-    GOOS=$TARGETOS GOARCH=$TARGETARCH xcaddy build ${CADDY_VERSION} \
+RUN echo "Building for \"$TARGETOS/$TARGETARCH\" on \"$BUILDPLATFORM\"" && \
+    echo "Caddy version: \"$CADDY_VERSION\"" && \
+    GOOS="$TARGETOS" GOARCH="$TARGETARCH" xcaddy build "$CADDY_VERSION" \
         --with github.com/mholt/caddy-webdav && \
     echo "Built binary at: $(readlink -f caddy)"
 
