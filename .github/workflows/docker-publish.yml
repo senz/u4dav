@@ -122,7 +122,7 @@ jobs:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
       - name: Echo build-and-push outputs
-        run: echo "${{ steps.build-and-push.outputs }}"
+        run: echo "${{ toJSON(steps.build-and-push.outputs) }}"
 
       - name: Export digest
         run: |
