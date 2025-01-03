@@ -20,7 +20,7 @@ env:
 
 jobs:
   build:
-    name: Build and push Docker image for ${{ matrix.platform.targetos }} ${{ matrix.platform.targetarch }}
+    name: Build and push Docker image for ${{ matrix.targetplatform }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -36,11 +36,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - targetos: linux
-            targetarch: amd64
-          - targetos: linux
-            targetarch: arm64
+        targetplatform:
+          - linux/amd64
+          - linux/arm64
 
     steps:
       - name: Checkout repository
@@ -87,12 +85,9 @@ jobs:
           call: check
           context: .
           file: Containerfile
-          platforms: ${{ matrix.platform.targetos }}/${{ matrix.platform.targetarch }}
+          platforms: ${{ matrix.targetplatform }}
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
-            BUILDPLATFORM=x86_64
-            TARGETOS=${{ matrix.platform.targetos }}
-            TARGETARCH=${{ matrix.platform.targetarch }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -102,12 +97,9 @@ jobs:
         with:
           context: .
           file: Containerfile
-          platforms: ${{ matrix.platform.targetos }}/${{ matrix.platform.targetarch }}
+          platforms: ${{ matrix.targetplatform }}
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
-            BUILDPLATFORM=x86_64
-            TARGETOS=${{ matrix.platform.targetos }}
-            TARGETARCH=${{ matrix.platform.targetarch }}
           # push: ${{ github.event_name != 'pull_request' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -135,7 +127,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.platform.targetos }}-${{ matrix.platform.targetarch }}
+          name: digests-${{ matrix.targetplatform }}
           path: ${{ env.DIGESTS_PATH }}/*
           if-no-files-found: error
           retention-days: 1
@@ -196,7 +188,7 @@ jobs:
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           docker buildx imagetools create "$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")" \
-            "$(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)"
+            "$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
 
       - name: inspect image
         run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw
