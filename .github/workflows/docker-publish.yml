@@ -76,9 +76,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Get Git commit timestamps
-        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
-
+      - name: Prepare env variable
+        run: |
+          echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
+      
       - name: Validate build configuration
         uses: docker/build-push-action@v6
         with:
@@ -114,9 +116,6 @@ jobs:
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
-      - name: Echo build-and-push outputs
-        run: echo "${{ toJSON(steps.build-and-push.outputs) }}"
-
       - name: Export digest
         run: |
           mkdir -p "$DIGESTS_PATH"
@@ -127,7 +126,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.targetplatform }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.DIGESTS_PATH }}/*
           if-no-files-found: error
           retention-days: 1
