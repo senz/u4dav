@@ -127,7 +127,7 @@ jobs:
 
       - name: Export digest
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/.digest"
+          mkdir -p "$GITHUB_WORKSPACE/digest"
           digest="${{ steps.build-and-push.outputs.digest }}"
           touch "$GITHUB_WORKSPACE/digest/${digest#sha256:}"
           ls -l "$GITHUB_WORKSPACE/digest"
