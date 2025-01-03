@@ -194,7 +194,7 @@ jobs:
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }} \
-            --annotation ${{ env.ANNOTATIONS }}
+            --annotation "${{ env.ANNOTATIONS }}"
 
       - name: inspect image
         run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw
