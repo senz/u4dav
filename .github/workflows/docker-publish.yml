@@ -93,9 +93,6 @@ jobs:
             TARGETOS=${{ matrix.platform.targetos }}
             TARGETARCH=${{ matrix.platform.targetarch }}
 
-      - name: Echo build-and-push outputs
-        run: echo "${{ steps.build-and-push.outputs }}"
-        
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
@@ -123,6 +120,9 @@ jobs:
             ${{ steps.meta.outputs.labels }}
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
+
+      - name: Echo build-and-push outputs
+        run: echo "${{ steps.build-and-push.outputs }}"
 
       - name: Export digest
         run: |
