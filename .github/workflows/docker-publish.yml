@@ -16,6 +16,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CADDY_VERSION: 2.8.4
   COSIGN_RELEASE: v2.4.1
+  GITHUB_WORKSPACE: ${{ github.workspace }}
 
 jobs:
   build:
@@ -129,6 +130,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/.digest"
           digest="${{ steps.build-and-push.outputs.digest }}"
           touch "$GITHUB_WORKSPACE/.digest/${digest#sha256:}"
+          ls -l "$GITHUB_WORKSPACE/.digest"
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
