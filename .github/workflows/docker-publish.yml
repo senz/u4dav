@@ -16,7 +16,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CADDY_VERSION: 2.8.4
   COSIGN_RELEASE: v2.4.1
-  GITHUB_WORKSPACE: ${{ github.workspace }}
+  DIGESTS_PATH: ${{ github.workspace }}/digest
 
 jobs:
   build:
@@ -127,16 +127,16 @@ jobs:
 
       - name: Export digest
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/digest"
+          mkdir -p "$DIGESTS_PATH"
           digest="${{ steps.build-and-push.outputs.digest }}"
-          touch "$GITHUB_WORKSPACE/digest/${digest#sha256:}"
-          ls -l "$GITHUB_WORKSPACE/digest"
+          touch "$DIGEST_PATH/${digest#sha256:}"
+          ls -l "$DIGEST_PATH"
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.platform.targetos }}-${{ matrix.platform.targetarch }}
-          path: ${{ github.workspace }}/digest/*
+          path: ${{ env.DIGESTS_PATH }}/*
           if-no-files-found: error
           retention-days: 1
 
@@ -170,7 +170,7 @@ jobs:
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          path: $GITHUB_WORKSPACE/.digest
+          path: ${{ env.DIGESTS_PATH }}
           pattern: digests-*
           merge-multiple: true
 
@@ -193,7 +193,7 @@ jobs:
             ${{ needs.build.outputs.tags }}
 
       - name: Create manifest list and push
-        working-directory: $GITHUB_WORKSPACE/.digest
+        working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           docker buildx imagetools create "$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")" \
             "$(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)"
