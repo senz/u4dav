@@ -113,7 +113,7 @@ jobs:
           cache-to: type=gha,mode=max
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - name: Export digest
         run: |
@@ -172,7 +172,7 @@ jobs:
           {
             echo "TAGS=$(jq -cr '.tags | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
             echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
-            echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+            echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | map("--annotation \"\(.)\"") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
           } >> "$GITHUB_ENV"
 
       - name: Create manifest list and push
