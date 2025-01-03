@@ -79,7 +79,7 @@ jobs:
       - name: Prepare env variable
         run: |
           echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
-          echo "ARTIFACT_NAME=$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=digests-$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
       
       - name: Validate build configuration
         uses: docker/build-push-action@v6
