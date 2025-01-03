@@ -136,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.platform.targetos }}-${{ matrix.platform.targetarch }}
-          path: $GITHUB_WORKSPACE/.digest/${digest#sha256:}
+          path: $GITHUB_WORKSPACE/.digest/**
           if-no-files-found: error
           retention-days: 1
 
