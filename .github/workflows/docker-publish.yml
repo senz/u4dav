@@ -129,8 +129,8 @@ jobs:
         run: |
           mkdir -p "$DIGESTS_PATH"
           digest="${{ steps.build-and-push.outputs.digest }}"
-          touch "$DIGEST_PATH/${digest#sha256:}"
-          ls -l "$DIGEST_PATH"
+          touch "$DIGESTS_PATH/${digest#sha256:}"
+          ls -l "$DIGESTS_PATH"
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
