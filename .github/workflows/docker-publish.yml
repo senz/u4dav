@@ -113,7 +113,7 @@ jobs:
           cache-to: type=gha,mode=max
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
       - name: Export digest
         run: |
@@ -130,25 +130,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      # Sign the resulting Docker image digest except on PRs.
-      # This will only write to the public Rekor transparency log when the Docker
-      # repository is public to avoid leaking data.  If you would like to publish
-      # transparency data even for private images, pass --force to cosign below.
-      # https://github.com/sigstore/cosign
-      - name: Sign the published Docker image
-        # if: ${{ github.event_name != 'pull_request' }}
-        if: false
-        env:
-          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        # This step uses the identity token to provision an ephemeral certificate
-        # against the sigstore community Fulcio instance.
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
-
   merge:
     runs-on: ubuntu-24.04
     needs: build
+    # if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read
       packages: write
@@ -181,14 +166,14 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: ${{ needs.build.outputs.tags }}
 
-      - name: Print image tags
+      - name: Prepare env variables
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
-          echo "$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")" \
-            "$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
-          echo "TAGS=$(jq -cr '.tags | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")" >> "$GITHUB_ENV"
-          echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)" >> "$GITHUB_ENV"
-          echo "ANNOTATIONS=$(jq -cr '.annotations | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")" >> "$GITHUB_ENV"
+          {
+            echo "TAGS=$(jq -cr '.tags | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+            echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
+            echo "ANNOTATIONS=$(jq -cr '.annotations | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+          } >> "$GITHUB_ENV"
 
       - name: Create manifest list and push
         working-directory: ${{ env.DIGESTS_PATH }}
@@ -198,3 +183,18 @@ jobs:
 
       - name: inspect image
         run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw
+
+      # Sign the resulting Docker image digest except on PRs.
+      # This will only write to the public Rekor transparency log when the Docker
+      # repository is public to avoid leaking data.  If you would like to publish
+      # transparency data even for private images, pass --force to cosign below.
+      # https://github.com/sigstore/cosign
+      - name: Sign the published Docker image
+        # if: ${{ github.event_name != 'pull_request' }}
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ env.TAGS }}
+          DIGEST: ${{ steps.meta.outputs.digest }}
+        # This step uses the identity token to provision an ephemeral certificate
+        # against the sigstore community Fulcio instance.
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
