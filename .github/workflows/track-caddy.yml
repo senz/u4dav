@@ -16,6 +16,7 @@ jobs:
     name: Get latest Caddy version
     outputs:
       caddy-version: ${{ steps.caddy-version.outputs.result }}
+      caddy-tag: ${{ steps.caddy-tag.outputs.caddy-tag }}
       new-version: ${{ steps.check-version.outputs.new-version }}
     steps:
       - name: Checkout
@@ -32,15 +33,20 @@ jobs:
               repo: 'caddy'
             });
 
-            return response.data.tag_name;
+            return response.data.tag_name.startsWith('v') ? response.data.tag_name.substring(1) : response.data.tag_name;
 
       - name: Print Caddy version
-        run: echo "Caddy version is ${{ steps.caddy-version.outputs.result }}"
+        id: caddy-tag
+        run: |
+          echo "Caddy version is ${{ steps.caddy-version.outputs.result }}"
+          {
+            echo "caddy-tag=v${{ steps.caddy-version.outputs.result }}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check if version exists
         id: check-version
         run: |
-          VERSION_EXISTS=$(git tag -l "v${{ steps.caddy-version.outputs.result }}")
+          VERSION_EXISTS=$(git tag -l "${{ steps.caddy-tag.outputs.caddy-tag }}")
           if [ -z "$VERSION_EXISTS" ]; then
             echo "new-version=true" >> "$GITHUB_OUTPUT"
           fi
@@ -64,7 +70,7 @@ jobs:
         with:
           message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}"
           add: CADDY_VERSION
-          tag: ${{ needs.get-latest-caddy.outputs.caddy-version }}
+          tag: ${{ needs.get-latest-caddy.outputs.caddy-tag }}
           push: true
 
   create-release:
@@ -83,6 +89,6 @@ jobs:
           prerelease: false
           draft: false
           make_latest: true
-          tag_name: ${{ needs.get-latest-caddy.outputs.caddy-version }}
+          tag_name: ${{ needs.get-latest-caddy.outputs.caddy-tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "Caddy version ${{ needs.get-latest-caddy.outputs.caddy-version }}"
