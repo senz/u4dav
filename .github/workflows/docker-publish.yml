@@ -138,12 +138,15 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
 
       - name: Export digest
+        # build-push actions does not provide digest output if push is false
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           mkdir -p "$DIGESTS_PATH"
           digest="${{ steps.build-and-push.outputs.digest }}"
           touch "$DIGESTS_PATH/${digest#sha256:}"
 
       - name: Upload digest
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
