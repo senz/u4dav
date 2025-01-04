@@ -76,9 +76,6 @@ jobs:
             suffix=-${{ matrix.targetplatform }}
             prefix=
 
-      - name: exit workflow
-        run: exit 1
-
       - name: Prepare env variables
         run: |
           echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
