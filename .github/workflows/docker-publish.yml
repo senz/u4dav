@@ -197,7 +197,7 @@ jobs:
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           {
-            echo "TAGS=$(jq -cr '.tags | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+            echo "TAGS=$(jq -cr '.tags | map("-t \(.)") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
             echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
             echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | map("--annotation \"\(.)\"") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
           } >> "$GITHUB_ENV"
@@ -207,7 +207,7 @@ jobs:
       - name: Create manifest list and push
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
-          docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }}
+          docker buildx imagetools create ${{ env.TAGS }} ${{ env.SOURCES }}
 
       - name: inspect image
         run: |
