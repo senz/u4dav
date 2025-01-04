@@ -62,7 +62,7 @@ jobs:
       - name: Commit new version
         uses: EndBug/add-and-commit@v9
         with:
-          message: "chore: update Caddy to v${{ needs.get-latest-caddy.outputs.caddy-version }}"
+          message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}"
           add: CADDY_VERSION
           tag: ${{ needs.get-latest-caddy.outputs.caddy-version }}
           push: true
