@@ -1,36 +1,19 @@
 ---
+name: Image Prune
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * 0"  # every week
 
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: image-prune
+  cancel-in-progress: true
+
 jobs:
-  clean-edge:
-    runs-on: ubuntu-24.04
-    name: Delete old edge images
-    steps:
-      - uses: snok/container-retention-policy@v3.0.0
-        with:
-          account: user
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "u4dav"
-          image-tags: "edge*"
-          cut-off: 1h  # delete images older than 1 hour
-          dry-run: true
-
-  clean-pr:
-    runs-on: ubuntu-24.04
-    name: Delete old PR images
-    steps:
-      - uses: snok/container-retention-policy@v3.0.0
-        with:
-          account: user
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "u4dav"
-          image-tags: "pr-*"
-          cut-off: 1h  # delete images older than 1 hour
-          dry-run: true
-
   clean-untagged:
     runs-on: ubuntu-24.04
     name: Delete untagged images
@@ -38,20 +21,35 @@ jobs:
       - uses: snok/container-retention-policy@v3.0.0
         with:
           account: user
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CLEANER_TOKEN }}
           image-names: "u4dav"
-          tag-selections: "untagged"
+          tag-selection: untagged
           cut-off: 1h
 
-  clean-shas:
+  clean-edge:
+    needs: clean-untagged
     runs-on: ubuntu-24.04
-    name: Delete old SHA images
+    name: Delete old edge images
     steps:
       - uses: snok/container-retention-policy@v3.0.0
         with:
           account: user
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CLEANER_TOKEN }}
           image-names: "u4dav"
-          image-tags: "sha-*"
+          image-tags: "edge*"
+          tag-selection: tagged
           cut-off: 1h  # delete images older than 1 hour
-          keep-n-most-recent: 60
+
+  clean-pr:
+    needs: clean-edge
+    runs-on: ubuntu-24.04
+    name: Delete old PR images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.CLEANER_TOKEN }}
+          image-names: "u4dav"
+          image-tags: "pr-*"
+          tag-selection: tagged
+          cut-off: 1h  # delete images older than 1 hour
