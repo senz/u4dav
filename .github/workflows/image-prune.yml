@@ -1,0 +1,57 @@
+---
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"  # every week
+
+jobs:
+  clean-edge:
+    runs-on: ubuntu-24.04
+    name: Delete old edge images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "u4dav"
+          image-tags: "edge*"
+          cut-off: 1h  # delete images older than 1 hour
+          dry-run: true
+
+  clean-pr:
+    runs-on: ubuntu-24.04
+    name: Delete old PR images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "u4dav"
+          image-tags: "pr-*"
+          cut-off: 1h  # delete images older than 1 hour
+          dry-run: true
+
+  clean-untagged:
+    runs-on: ubuntu-24.04
+    name: Delete untagged images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "u4dav"
+          tag-selections: "untagged"
+          cut-off: 1h
+
+  clean-shas:
+    runs-on: ubuntu-24.04
+    name: Delete old SHA images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "u4dav"
+          image-tags: "sha-*"
+          cut-off: 1h  # delete images older than 1 hour
+          keep-n-most-recent: 60
