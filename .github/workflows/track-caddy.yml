@@ -27,7 +27,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const response = await github.repos.getLatestRelease({
+            const response = await github.rest.repos.getLatestRelease({
               owner: 'caddyserver',
               repo: 'caddy'
             });
