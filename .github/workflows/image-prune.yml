@@ -30,7 +30,7 @@ jobs:
           image-tags: "pr-*"
           cut-off: 1h  # delete images older than 1 hour
           dry-run: true
-  
+
   clean-untagged:
     runs-on: ubuntu-24.04
     name: Delete untagged images
@@ -55,4 +55,3 @@ jobs:
           image-tags: "sha-*"
           cut-off: 1h  # delete images older than 1 hour
           keep-n-most-recent: 60
-
