@@ -27,7 +27,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const response = await github.repos.getLatestRelease({
+            const response = await github.rest.repos.getLatestRelease({
               owner: 'caddyserver',
               repo: 'caddy'
             });
@@ -50,6 +50,8 @@ jobs:
     name: Commit new version
     needs: get-latest-caddy
     if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,6 +74,8 @@ jobs:
       - commit-new-version
       - get-latest-caddy
     if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
+    permissions:
+      contents: write
     steps:
       - name: Create release
         uses: softprops/action-gh-release@v2
