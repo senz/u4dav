@@ -66,9 +66,20 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.IMAGE_NAME}}
+          tags: |
+            type=ref,event=pr
+            type=sha,format=short
+          flavor: |
+            latest=false
+            suffix=-${{ matrix.targetplatform }}
+            prefix=
 
-      - name: Prepare env variable
+      - name: exit workflow
+        run: exit 1
+
+      - name: Prepare env variables
         run: |
           echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=digests-$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
@@ -178,8 +189,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: ${{ needs.build.outputs.tags }}
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=pr
+            type=sha,format=short
+            type=edge,branch=main
+            type=semver,pattern={{version}}
 
       - name: Prepare env variables
         working-directory: ${{ env.DIGESTS_PATH }}
