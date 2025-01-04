@@ -1,4 +1,5 @@
 ---
+name: Image Prune
 on:
   workflow_dispatch:
   schedule:
@@ -7,6 +8,10 @@ on:
 permissions:
   contents: read
   packages: write
+
+concurrency:
+  group: image-prune
+  cancel-in-progress: true
 
 jobs:
   clean-untagged:
@@ -22,6 +27,7 @@ jobs:
           cut-off: 1h
 
   clean-edge:
+    needs: clean-untagged
     runs-on: ubuntu-24.04
     name: Delete old edge images
     steps:
@@ -36,6 +42,7 @@ jobs:
           dry-run: true
 
   clean-pr:
+    needs: clean-edge
     runs-on: ubuntu-24.04
     name: Delete old PR images
     steps:
