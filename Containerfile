@@ -3,7 +3,8 @@
 # https://docs.docker.com/reference/dockerfile/#buildkit-built-in-build-args
 
 ARG CADDY_VERSION=2.9
-FROM --platform=$BUILDPLATFORM caddy:${CADDY_VERSION}-builder-alpine AS builder
+ARG CADDY_BUILDER_VERSION=2.9
+FROM --platform=$BUILDPLATFORM caddy:${CADDY_BUILDER_VERSION}-builder-alpine AS builder
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG TARGETOS TARGETARCH
