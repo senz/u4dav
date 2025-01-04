@@ -39,7 +39,6 @@ jobs:
           image-tags: "edge*"
           tag-selection: tagged
           cut-off: 1h  # delete images older than 1 hour
-          dry-run: true
 
   clean-pr:
     needs: clean-edge
@@ -54,4 +53,3 @@ jobs:
           image-tags: "pr-*"
           tag-selection: tagged
           cut-off: 1h  # delete images older than 1 hour
-          dry-run: true
