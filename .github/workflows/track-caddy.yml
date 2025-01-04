@@ -19,7 +19,8 @@ jobs:
       new-version: ${{ steps.check-version.outputs.new-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Get latest
         uses: actions/github-script@v7
         id: caddy-version
@@ -35,7 +36,7 @@ jobs:
 
       - name: Print Caddy version
         run: echo "Caddy version is ${{ steps.caddy-version.outputs.result }}"
-      
+
       - name: Check if version exists
         id: check-version
         run: |
@@ -43,7 +44,7 @@ jobs:
           if [ -z "$VERSION_EXISTS" ]; then
             echo "new-version=true" >> "$GITHUB_OUTPUT"
           fi
-  
+
   commit-new-version:
     runs-on: ubuntu-24.04
     name: Commit new version
@@ -51,7 +52,7 @@ jobs:
     if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Echo new version
         run: echo "v${{ needs.get-latest-caddy.outputs.caddy-version }}" > CADDY_VERSION
@@ -63,7 +64,7 @@ jobs:
           add: CADDY_VERSION
           tag: ${{ needs.get-latest-caddy.outputs.caddy-version }}
           push: true
-        
+
   create-release:
     runs-on: ubuntu-24.04
     name: Create release
