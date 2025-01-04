@@ -68,7 +68,9 @@ jobs:
   create-release:
     runs-on: ubuntu-24.04
     name: Create release
-    needs: commit-new-version
+    needs: 
+     - commit-new-version
+     - get-latest-caddy
     if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
     steps:
       - name: Create release
