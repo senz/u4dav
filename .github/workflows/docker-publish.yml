@@ -14,7 +14,6 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  CADDY_VERSION: 2.8.4
   COSIGN_RELEASE: v2.4.1
   DIGESTS_PATH: ${{ github.workspace }}/digest
 
@@ -43,6 +42,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Get Caddy version
+        id: caddy-version
+        run: |
+          echo "CADDY_VERSION=$(cat CADDY_VERSION)" >> "$GITHUB_ENV"
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache

@@ -1,0 +1,84 @@
+---
+name: Track Caddy Releases
+
+on:
+  schedule:
+    - cron: "0 0 * * 0" # every week
+  workflow_dispatch:
+
+concurrency:
+  group: caddy-release
+  cancel-in-progress: true
+
+jobs:
+  get-latest-caddy:
+    runs-on: ubuntu-24.04
+    name: Get latest Caddy version
+    outputs:
+      caddy-version: ${{ steps.caddy-version.outputs.result }}
+      new-version: ${{ steps.check-version.outputs.new-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest
+        uses: actions/github-script@v7
+        id: caddy-version
+        with:
+          result-encoding: string
+          script: |
+            const response = await github.repos.getLatestRelease({
+              owner: 'caddyserver',
+              repo: 'caddy'
+            });
+
+            return response.data.tag_name;
+
+      - name: Print Caddy version
+        run: echo "Caddy version is ${{ steps.caddy-version.outputs.result }}"
+
+      - name: Check if version exists
+        id: check-version
+        run: |
+          VERSION_EXISTS=$(git tag -l "v${{ steps.caddy-version.outputs.result }}")
+          if [ -z "$VERSION_EXISTS" ]; then
+            echo "new-version=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  commit-new-version:
+    runs-on: ubuntu-24.04
+    name: Commit new version
+    needs: get-latest-caddy
+    if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Echo new version
+        run: echo "v${{ needs.get-latest-caddy.outputs.caddy-version }}" > CADDY_VERSION
+
+      - name: Commit new version
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "chore: update Caddy to v${{ needs.get-latest-caddy.outputs.caddy-version }}"
+          add: CADDY_VERSION
+          tag: ${{ needs.get-latest-caddy.outputs.caddy-version }}
+          push: true
+
+  create-release:
+    runs-on: ubuntu-24.04
+    name: Create release
+    needs:
+      - commit-new-version
+      - get-latest-caddy
+    if: ${{ needs.get-latest-caddy.outputs.new-version == 'true' }}
+    steps:
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: false
+          draft: false
+          make_latest: true
+          tag_name: ${{ needs.get-latest-caddy.outputs.caddy-version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: "Caddy version ${{ needs.get-latest-caddy.outputs.caddy-version }}"
