@@ -44,14 +44,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install the cosign tool except on PR
-      # https://github.com/sigstore/cosign-installer
-      - name: Install cosign
-        # if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da #v3.7.0
-        with:
-          cosign-release: ${{ env.COSIGN_RELEASE }}
-
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
       # https://github.com/docker/setup-buildx-action
@@ -181,6 +173,14 @@ jobs:
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }}
+
+      # Install the cosign tool except on PR
+      # https://github.com/sigstore/cosign-installer
+      - name: Install cosign
+        # if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da #v3.7.0
+        with:
+          cosign-release: ${{ env.COSIGN_RELEASE }}
 
       - name: inspect image
         run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw
