@@ -174,12 +174,13 @@ jobs:
             echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
             echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | map("--annotation \"\(.)\"") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
           } >> "$GITHUB_ENV"
+      # Annotations are not used yet
+      # See https://github.com/docker/buildx/issues/2148
 
       - name: Create manifest list and push
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
-          docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }} \
-            ${{ env.ANNOTATIONS }}
+          docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }}
 
       - name: inspect image
         run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw
