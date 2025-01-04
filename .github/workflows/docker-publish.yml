@@ -53,7 +53,7 @@ jobs:
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -66,9 +66,17 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=pr
+            type=sha,format=short
+          flavor: |
+            latest=false
+            suffix=-${{ matrix.targetplatform }}
+            prefix=
 
-      - name: Prepare env variable
+      - name: Prepare env variables
         run: |
           echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=digests-$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
@@ -94,8 +102,7 @@ jobs:
           platforms: ${{ matrix.targetplatform }}
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
-          # push: ${{ github.event_name != 'pull_request' }}
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -110,7 +117,7 @@ jobs:
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da #v3.7.0
         with:
           cosign-release: ${{ env.COSIGN_RELEASE }}
@@ -121,7 +128,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        # if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -131,13 +138,15 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
 
       - name: Export digest
+        # build-push actions does not provide digest output if push is false
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           mkdir -p "$DIGESTS_PATH"
           digest="${{ steps.build-and-push.outputs.digest }}"
           touch "$DIGESTS_PATH/${digest#sha256:}"
-          ls -l "$DIGESTS_PATH"
 
       - name: Upload digest
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
@@ -148,7 +157,7 @@ jobs:
   merge:
     runs-on: ubuntu-24.04
     needs: build
-    # if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read
       packages: write
@@ -179,13 +188,17 @@ jobs:
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: ${{ needs.build.outputs.tags }}
+          tags: |
+            type=ref,event=pr
+            type=sha,format=short
+            type=edge,branch=main
+            type=semver,pattern={{version}}
 
       - name: Prepare env variables
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
           {
-            echo "TAGS=$(jq -cr '.tags | join(",")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+            echo "TAGS=$(jq -cr '.tags | map("-t \(.)") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
             echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
             echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | map("--annotation \"\(.)\"") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
           } >> "$GITHUB_ENV"
@@ -195,7 +208,7 @@ jobs:
       - name: Create manifest list and push
         working-directory: ${{ env.DIGESTS_PATH }}
         run: |
-          docker buildx imagetools create -t ${{ env.TAGS }} ${{ env.SOURCES }}
+          docker buildx imagetools create ${{ env.TAGS }} ${{ env.SOURCES }}
 
       - name: inspect image
         run: |
