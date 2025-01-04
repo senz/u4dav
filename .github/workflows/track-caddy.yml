@@ -70,7 +70,6 @@ jobs:
         with:
           message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}"
           add: CADDY_VERSION
-          tag: ${{ needs.get-latest-caddy.outputs.caddy-tag }}
           push: true
 
   create-release:
