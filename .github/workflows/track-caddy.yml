@@ -91,3 +91,26 @@ jobs:
           tag_name: ${{ needs.get-latest-caddy.outputs.caddy-tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "Caddy version ${{ needs.get-latest-caddy.outputs.caddy-version }}"
+
+  call-publish:
+    runs-on: ubuntu-24.04
+    name: Call publish
+    needs: create-release
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+    - name: Call Docker Publish Workflow
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'docker-publish.yml',
+            ref: context.ref,
+            # inputs: {
+            #   version: '${{ needs.get-latest-caddy.outputs.caddy-version }}'
+            # }
+          });
