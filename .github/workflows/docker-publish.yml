@@ -202,7 +202,7 @@ jobs:
         id: image-version
         run: |
           if [ -n "${{ github.ref }}" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            echo "IMAGE_VERSION=${{ github.ref | split('/')[-1] }}" >> "$GITHUB_ENV"
+            echo "IMAGE_VERSION=$(echo ${{ github.ref }} | awk -F'/' '{print $NF}')" >> "$GITHUB_ENV"
           elif [ -n "${{ github.event.inputs.version }}" ]; then
             echo "IMAGE_VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
           else
