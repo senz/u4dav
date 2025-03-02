@@ -109,8 +109,5 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             workflow_id: 'docker-publish.yml',
-            ref: context.ref,
-            # inputs: {
-            #   version: '${{ needs.get-latest-caddy.outputs.caddy-version }}'
-            # }
+            ref: context.ref
           });
