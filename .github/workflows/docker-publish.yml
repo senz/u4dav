@@ -200,7 +200,7 @@ jobs:
         id: caddy-version
         run: |
           echo "CADDY_VERSION=$(cat CADDY_VERSION)" >> "$GITHUB_ENV"
-      
+
       - name: Define image version
         id: image-version
         run: |
