@@ -20,7 +20,7 @@ jobs:
       new-version: ${{ steps.check-version.outputs.new-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Get latest
         uses: actions/github-script@v8
@@ -60,7 +60,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Echo new version
         run: echo "${{ needs.get-latest-caddy.outputs.caddy-version }}" > CADDY_VERSION
