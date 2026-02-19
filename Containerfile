@@ -7,11 +7,12 @@ FROM --platform=$BUILDPLATFORM caddy:${CADDY_VERSION}-builder-alpine AS builder
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG TARGETOS TARGETARCH
+ARG CADDY_WEBDAV_VERSION=master
 
 RUN echo "Building for \"$TARGETOS/$TARGETARCH\" on \"$BUILDPLATFORM\"" && \
     echo "Caddy version: \"$CADDY_VERSION\"" && \
     GOOS="$TARGETOS" GOARCH="$TARGETARCH" xcaddy build "$CADDY_VERSION" \
-        --with github.com/mholt/caddy-webdav && \
+        --with github.com/mholt/caddy-webdav@${CADDY_WEBDAV_VERSION} && \
     echo "Built binary at: $(readlink -f caddy)"
 
 FROM caddy:${CADDY_VERSION}-alpine

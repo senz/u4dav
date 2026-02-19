@@ -52,6 +52,7 @@ jobs:
         id: caddy-version
         run: |
           echo "CADDY_VERSION=$(cat CADDY_VERSION)" >> "$GITHUB_ENV"
+          echo "CADDY_WEBDAV_VERSION=$(cat WEBDAV_VERSION 2>/dev/null || echo 'master')" >> "$GITHUB_ENV"
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
@@ -100,6 +101,7 @@ jobs:
           platforms: ${{ matrix.targetplatform }}
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
+            CADDY_WEBDAV_VERSION=${{ env.CADDY_WEBDAV_VERSION }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -112,6 +114,7 @@ jobs:
           platforms: ${{ matrix.targetplatform }}
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
+            CADDY_WEBDAV_VERSION=${{ env.CADDY_WEBDAV_VERSION }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}

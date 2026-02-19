@@ -18,6 +18,7 @@ jobs:
       caddy-version: ${{ steps.caddy-version.outputs.result }}
       caddy-tag: ${{ steps.caddy-tag.outputs.caddy-tag }}
       new-version: ${{ steps.check-version.outputs.new-version }}
+      webdav-version: ${{ steps.webdav-version.outputs.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -34,6 +35,19 @@ jobs:
             });
 
             return response.data.tag_name.startsWith('v') ? response.data.tag_name.substring(1) : response.data.tag_name;
+
+      - name: Get latest caddy-webdav master commit
+        uses: actions/github-script@v8
+        id: webdav-version
+        with:
+          script: |
+            const { data } = await github.rest.repos.listCommits({
+              owner: 'mholt',
+              repo: 'caddy-webdav',
+              sha: 'master',
+              per_page: 1
+            });
+            core.setOutput('sha', data[0].sha);
 
       - name: Print Caddy version
         id: caddy-tag
@@ -63,13 +77,15 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Echo new version
-        run: echo "${{ needs.get-latest-caddy.outputs.caddy-version }}" > CADDY_VERSION
+        run: |
+          echo "${{ needs.get-latest-caddy.outputs.caddy-version }}" > CADDY_VERSION
+          echo "${{ needs.get-latest-caddy.outputs.webdav-version }}" > WEBDAV_VERSION
 
       - name: Commit new version
         uses: EndBug/add-and-commit@v9
         with:
-          message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}"
-          add: CADDY_VERSION
+          message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}, caddy-webdav to ${{ needs.get-latest-caddy.outputs.webdav-version }}"
+          add: CADDY_VERSION WEBDAV_VERSION
           push: true
 
   create-release:
