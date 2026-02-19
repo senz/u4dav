@@ -15,6 +15,11 @@
 }
 
 :80 {
+	log {
+		output {$CADDY_LOG_OUTPUT:stdout}
+		format console
+		level  {$CADDY_LOG_LEVEL:INFO}
+	}
 	@get method GET
 	root * /home/caddy/caddy-media
 	route {
