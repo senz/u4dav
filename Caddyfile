@@ -21,7 +21,7 @@
 			-Server
 		}
 		request_body {
-			max_size 1gb
+			max_size {$CADDY_REQUEST_BODY_MAX_SIZE:1gb}
 		}
 		file_server @get browse
 		webdav
