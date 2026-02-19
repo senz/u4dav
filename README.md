@@ -14,7 +14,7 @@ Lightweight: image size ~87 MB, process mem consumption ~12 MB
 
 ## Usage
 
-`docker pull ghcr.io/senz/u4dav:main`
+`docker pull ghcr.io/senz/u4dav:edge`
 
 Container env variables:
 
@@ -23,9 +23,10 @@ Container env variables:
 | USERNAME            | User login for basic auth |
 | PASSWORD            | Plaintext user password |
 | CADDY_LOG_OUTPUT    | Where to send Caddy runtime logs: `stdout`, `stderr`, `discard`, or a file path. Default: `discard` |
-| CADDY_LOG_LEVEL     | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR`. Default: `INFO` |
+| CADDY_LOG_LEVEL              | Minimum log level: `INFO`, `ERROR`. Default: `INFO` |
+| CADDY_REQUEST_BODY_MAX_SIZE  | Max size for request body (e.g. `1gb`, `100mb`). Default: `1gb` |
 
 Mount your data under `/home/caddy/caddy-media` container folder.
 
 Quick local test:
-`docker run  -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/home/caddy/caddy-media ghcr.io/senz/u4dav:main`
+`docker run  -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/home/caddy/caddy-media ghcr.io/senz/u4dav:edge`
