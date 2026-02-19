@@ -1,0 +1,20 @@
+# Alternative u4dav image: WebDAV via rclone serve webdav.
+# Same contract: USERNAME, PASSWORD; data path in container is /media.
+# https://rclone.org/commands/rclone_serve_webdav/
+
+FROM rclone/rclone:latest
+
+COPY entrypoint-rclone.sh /usr/bin/entrypoint-rclone.sh
+RUN chmod +x /usr/bin/entrypoint-rclone.sh
+
+RUN addgroup -g 1000 -S webdav && adduser -u 1000 -S webdav -G webdav -h /home/webdav && \
+    mkdir -p /media && chown webdav:webdav /media
+
+USER webdav
+
+EXPOSE 80
+
+WORKDIR /media
+
+# Override base image ENTRYPOINT so we run our script, not "rclone <script>"
+ENTRYPOINT ["/usr/bin/entrypoint-rclone.sh"]

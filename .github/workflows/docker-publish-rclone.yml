@@ -1,0 +1,200 @@
+---
+name: Docker (rclone)
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      - v*
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Container image version for semver'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  COSIGN_RELEASE: v2.4.1
+  DIGESTS_PATH: ${{ github.workspace }}/digest
+  TAG_SUFFIX: -rclone
+
+jobs:
+  build:
+    name: Build and push rclone image for ${{ matrix.targetplatform }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        targetplatform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=pr,suffix=${{ env.TAG_SUFFIX }}
+            type=sha,format=short,suffix=${{ env.TAG_SUFFIX }}
+            type=edge,branch=main,suffix=${{ env.TAG_SUFFIX }}
+          flavor: |
+            latest=false
+            suffix=-${{ matrix.targetplatform }}
+            prefix=
+
+      - name: Prepare env variables
+        run: |
+          echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=digests-$(echo ${{ matrix.targetplatform }} | tr / -)" >> "$GITHUB_ENV"
+
+      - name: Validate build configuration
+        uses: docker/build-push-action@v6
+        with:
+          call: check
+          context: .
+          file: Containerfile.rclone
+          platforms: ${{ matrix.targetplatform }}
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile.rclone
+          platforms: ${{ matrix.targetplatform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          labels: ${{ steps.meta.outputs.labels }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad #v4.0.0
+        with:
+          cosign-release: ${{ env.COSIGN_RELEASE }}
+
+      - name: Sign the published Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
+
+      - name: Export digest
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          mkdir -p "$DIGESTS_PATH"
+          digest="${{ steps.build-and-push.outputs.digest }}"
+          touch "$DIGESTS_PATH/${digest#sha256:}"
+
+      - name: Upload digest
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DIGESTS_PATH }}/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-24.04
+    needs: build
+    if: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ env.DIGESTS_PATH }}
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup docker buildx for multi-platform builds
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Define image version
+        id: image-version
+        run: |
+          if [ -n "${{ github.ref }}" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "IMAGE_VERSION=$(echo ${{ github.ref }} | sed 's/^refs\/tags\/v//')" >> "$GITHUB_ENV"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "IMAGE_VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+          else
+            echo "IMAGE_VERSION=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Docker meta
+        id: meta-tag
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=pr,suffix=-rclone
+            type=sha,format=short,suffix=-rclone
+            type=edge,branch=main,suffix=-rclone
+            type=semver,pattern={{version}},value=${{ env.IMAGE_VERSION }},suffix=-rclone
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.IMAGE_VERSION }},suffix=-rclone
+            type=semver,pattern={{major}},value=${{ env.IMAGE_VERSION }},suffix=-rclone
+
+      - name: Prepare env variables
+        working-directory: ${{ env.DIGESTS_PATH }}
+        run: |
+          {
+            echo "TAGS=$(jq -cr '.tags | map("-t \(.)") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+            echo "SOURCES=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
+            echo "ANNOTATIONS=$(jq -cr '.annotations | map(sub("^manifest:*"; "")) | map("--annotation \"\(.)\"") | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")"
+          } >> "$GITHUB_ENV"
+
+      - name: Create manifest list and push
+        working-directory: ${{ env.DIGESTS_PATH }}
+        run: |
+          docker buildx imagetools create ${{ env.TAGS }} ${{ env.SOURCES }}

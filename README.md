@@ -42,3 +42,18 @@ The image is published to [GitHub Container Registry](https://docs.github.com/en
 | major.minor | Same | `ghcr.io/senz/u4dav:2.4` |
 | full version | Same (no `v` prefix) | `ghcr.io/senz/u4dav:2.4.1` |
 
+### Alternative image (rclone)
+
+An alternative image serves WebDAV via [rclone serve webdav](https://rclone.org/commands/rclone_serve_webdav/) instead of Caddy. Same env vars `USERNAME`, `PASSWORD`; mount your data under `/media`. Use the `-rclone` tag suffix.
+
+| Var name         | Description |
+|------------------|-------------|
+| USERNAME         | User login for basic auth |
+| PASSWORD         | Plaintext user password |
+| RCLONE_ADDR      | Listen address (default `:80`), e.g. `:8080` |
+| RCLONE_LOG_LEVEL | Log level: `DEBUG`, `INFO`, `NOTICE`, `ERROR`. Default: `INFO` |
+
+Example:
+
+`docker run -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/media ghcr.io/senz/u4dav:edge-rclone`
+
