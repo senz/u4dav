@@ -5,7 +5,7 @@
 	log {
 		# logging increases mem usage significantly
 		# output stdout
-		output discard
+		output {$CADDY_LOG_OUTPUT:discard}
 		format console
 	}
 	storage file_system {
