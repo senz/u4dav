@@ -6,6 +6,7 @@
 		# logging increases mem usage significantly
 		# output stdout
 		output {$CADDY_LOG_OUTPUT:discard}
+		level  {$CADDY_LOG_LEVEL:INFO}
 		format console
 	}
 	storage file_system {
