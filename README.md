@@ -30,3 +30,15 @@ Mount your data under `/home/caddy/caddy-media` container folder.
 
 Quick local test:
 `docker run  -e USERNAME=ud4v -e PASSWORD=udaff -p 8080:80 -v ./media:/home/caddy/caddy-media ghcr.io/senz/u4dav:edge`
+
+### Image tags
+
+The image is published to [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry). Available tags:
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `edge` | Push to `main` | `ghcr.io/senz/u4dav:edge` |
+| major | On semver tag push `v*` | `ghcr.io/senz/u4dav:2` |
+| major.minor | Same | `ghcr.io/senz/u4dav:2.4` |
+| full version | Same (no `v` prefix) | `ghcr.io/senz/u4dav:2.4.1` |
+
