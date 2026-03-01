@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     name: Delete untagged images
     steps:
-      - uses: snok/container-retention-policy@v3.0.0
+      - uses: snok/container-retention-policy@v3.0.1
         with:
           account: user
           token: ${{ secrets.CLEANER_TOKEN }}
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-24.04
     name: Delete old edge images
     steps:
-      - uses: snok/container-retention-policy@v3.0.0
+      - uses: snok/container-retention-policy@v3.0.1
         with:
           account: user
           token: ${{ secrets.CLEANER_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-24.04
     name: Delete old PR images
     steps:
-      - uses: snok/container-retention-policy@v3.0.0
+      - uses: snok/container-retention-policy@v3.0.1
         with:
           account: user
           token: ${{ secrets.CLEANER_TOKEN }}
