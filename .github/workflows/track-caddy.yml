@@ -82,7 +82,7 @@ jobs:
           echo "${{ needs.get-latest-caddy.outputs.webdav-version }}" > WEBDAV_VERSION
 
       - name: Commit new version
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           message: "chore: update Caddy to ${{ needs.get-latest-caddy.outputs.caddy-version }}, caddy-webdav to ${{ needs.get-latest-caddy.outputs.webdav-version }}"
           add: CADDY_VERSION WEBDAV_VERSION
